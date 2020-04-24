@@ -35,7 +35,6 @@ func (app *application)render(w http.ResponseWriter, r *http.Request, name strin
 
 	err := ts.Execute(buf, td)
 
-	fmt.Println(buf)
 	if err != nil {
 		app.serveError(w, err)
 		return
