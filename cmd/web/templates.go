@@ -2,6 +2,7 @@ package main
 
 import (
 	"html/template"
+	"lantianyou.com/snippetbox/pkg/forms"
 	"lantianyou.com/snippetbox/pkg/models"
 	"path/filepath"
 	"time"
@@ -11,6 +12,8 @@ type templateData struct {
 	CurrentYear int
 	Snippet *models.Snippet
 	Snippets []*models.Snippet
+	Flash string
+	Form *forms.Form
 }
 
 func newTemplatesCache(dir string) (map[string]*template.Template, error){

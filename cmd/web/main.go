@@ -1,20 +1,24 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golangcollege/sessions"
 	"html/template"
 	"lantianyou.com/snippetbox/pkg/models/mysql"
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	session       *sessions.Session
 	templateCache map[string]*template.Template
 }
 
@@ -22,6 +26,7 @@ func main(){
 
 	addr := flag.String("addr", ":4000", "http address")
 	dsn  := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name and password")
+	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 	flag.Parse()
 
 	// Must be called after all flags are defined
@@ -41,12 +46,22 @@ func main(){
 		errorLog.Fatalln(err)
 	}
 
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+	session.Secure = true
+
+	tlsConfig := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	app := &application{
 		errorLog: errorLog,
 		infoLog: infoLog,
 		snippets: &mysql.SnippetModel{
 			DB: db,
 		},
+		session:       session,
 		templateCache: templateCache,
 	}
 
@@ -54,10 +69,14 @@ func main(){
 		Addr: *addr,
 		ErrorLog: errorLog,
 		Handler: app.routes(),
+		TLSConfig: tlsConfig,
+		IdleTimeout: time.Minute,
+		ReadTimeout: 5*time.Second,
+		WriteTimeout: 10*time.Second,
 	}
 
 	infoLog.Printf("listening on %s", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 }
 
