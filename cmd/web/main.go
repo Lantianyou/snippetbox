@@ -20,20 +20,21 @@ type application struct {
 	snippets      *mysql.SnippetModel
 	session       *sessions.Session
 	templateCache map[string]*template.Template
+	users         *mysql.UserModel
 }
 
-func main(){
+func main() {
 
 	addr := flag.String("addr", ":4000", "http address")
-	dsn  := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name and password")
+	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name and password")
 	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 	flag.Parse()
 
 	// Must be called after all flags are defined
 	// and before flags are accessed by the program.
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate | log.Ltime)
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate | log.Ltime | log.Lshortfile)
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	db, err := OpenDB(*dsn)
 	if err != nil {
@@ -49,6 +50,8 @@ func main(){
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
 	session.Secure = true
+	session.SameSite = http.SameSiteDefaultMode
+
 
 	tlsConfig := &tls.Config{
 		PreferServerCipherSuites: true,
@@ -57,22 +60,25 @@ func main(){
 
 	app := &application{
 		errorLog: errorLog,
-		infoLog: infoLog,
+		infoLog:  infoLog,
 		snippets: &mysql.SnippetModel{
 			DB: db,
 		},
 		session:       session,
 		templateCache: templateCache,
+		users: &mysql.UserModel{
+			DB: db,
+		},
 	}
 
 	srv := &http.Server{
-		Addr: *addr,
-		ErrorLog: errorLog,
-		Handler: app.routes(),
-		TLSConfig: tlsConfig,
-		IdleTimeout: time.Minute,
-		ReadTimeout: 5*time.Second,
-		WriteTimeout: 10*time.Second,
+		Addr:         *addr,
+		ErrorLog:     errorLog,
+		Handler:      app.routes(),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	infoLog.Printf("listening on %s", *addr)
@@ -80,13 +86,13 @@ func main(){
 	errorLog.Fatal(err)
 }
 
-func OpenDB(dsn string) (*sql.DB, error){
+func OpenDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = db.Ping();err!=nil {
+	if err = db.Ping(); err != nil {
 		return nil, err
 	}
 	return db, err

@@ -2,11 +2,13 @@
 {{define "title"}}
 create new post
 {{end}}
+
 {{define "main"}}
 <form action="/snippet/create" method="POST">
     {{with .Form}}
             <div>
                 <label>Title:</label>
+                <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                 {{with .Errors.Get "title"}}
                 <label class='error'>{{.}}</label>
                             {{end}}

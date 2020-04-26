@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/justinas/alice v1.2.0
+	github.com/justinas/nosurf v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5 // indirect
 	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
 )

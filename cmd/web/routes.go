@@ -6,18 +6,18 @@ import (
 	"net/http"
 )
 
-func (app *application) routes() http.Handler{
+func (app *application) routes() http.Handler {
 
 	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
-	dynamicMiddleware := alice.New(app.session.Enable)
+	dynamicMiddleware := alice.New(app.session.Enable, noSurf)
 	//mux := pat.New()
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", app.home)
+	r.Handle("/", dynamicMiddleware.ThenFunc(app.home))
 
-	r.Handle("/snippet/create", dynamicMiddleware.ThenFunc(app.createSnippet)).Methods(http.MethodPost)
-	r.Handle("/snippet/create", dynamicMiddleware.ThenFunc(app.createSnippetForm)).Methods(http.MethodGet)
+	r.Handle("/snippet/create", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.createSnippet)).Methods(http.MethodPost)
+	r.Handle("/snippet/create", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.createSnippetForm)).Methods(http.MethodGet)
 	r.Handle("/snippet/{id}", dynamicMiddleware.ThenFunc(app.showSnippet)).Methods(http.MethodGet)
 	r.Handle("/user/signup", dynamicMiddleware.ThenFunc(app.signupUser)).Methods(http.MethodPost)
 	r.Handle("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm)).Methods(http.MethodGet)

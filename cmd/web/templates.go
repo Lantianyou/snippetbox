@@ -10,13 +10,15 @@ import (
 
 type templateData struct {
 	CurrentYear int
-	Snippet *models.Snippet
-	Snippets []*models.Snippet
-	Flash string
-	Form *forms.Form
+	Snippet     *models.Snippet
+	Snippets    []*models.Snippet
+	Flash       string
+	Form        *forms.Form
+	IsAuthenticated bool
+	CSRFToken string
 }
 
-func newTemplatesCache(dir string) (map[string]*template.Template, error){
+func newTemplatesCache(dir string) (map[string]*template.Template, error) {
 
 	cache := map[string]*template.Template{}
 
@@ -25,11 +27,11 @@ func newTemplatesCache(dir string) (map[string]*template.Template, error){
 		return nil, err
 	}
 
-	for _, page := range pages{
+	for _, page := range pages {
 
 		name := filepath.Base(page)
 
-		ts, err  := template.New(name).Funcs(functions).ParseFiles(page)
+		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 
 		if err != nil {
 			return nil, err
@@ -56,5 +58,5 @@ func humanDate(t time.Time) string {
 }
 
 var functions = template.FuncMap{
-	"humanDate" :humanDate,
+	"humanDate": humanDate,
 }
