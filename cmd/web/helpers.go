@@ -33,7 +33,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 
 	buf := new(bytes.Buffer)
 
-	err := ts.Execute(buf, td)
+	err := ts.Execute(buf, app.addDefaultData(td, r))
 
 	if err != nil {
 		app.serverError(w, err)
@@ -56,5 +56,9 @@ func (app application) addDefaultData(td *templateData, r *http.Request) *templa
 }
 
 func (app application) isAuthenticated(r *http.Request) bool{
-	return app.session.Exists(r, "authenticatedUserID")
+	isAuthenticated, ok := r.Context().Value(contextKeyIsAuthenticated).(bool)
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }

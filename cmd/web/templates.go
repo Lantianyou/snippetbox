@@ -9,13 +9,13 @@ import (
 )
 
 type templateData struct {
-	CurrentYear int
-	Snippet     *models.Snippet
-	Snippets    []*models.Snippet
-	Flash       string
-	Form        *forms.Form
+	CurrentYear     int
+	Snippet         *models.Snippet
+	Snippets        []*models.Snippet
+	Flash           string
+	Form            *forms.Form
 	IsAuthenticated bool
-	CSRFToken string
+	CSRFToken       string
 }
 
 func newTemplatesCache(dir string) (map[string]*template.Template, error) {
@@ -54,6 +54,10 @@ func newTemplatesCache(dir string) (map[string]*template.Template, error) {
 }
 
 func humanDate(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
 	return t.Format("02 Jan 2006 at 15:04")
 }
 
